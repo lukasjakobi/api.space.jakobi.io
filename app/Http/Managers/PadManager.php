@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Managers;
 
 use App\Models\Pad;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class PadManager
@@ -14,16 +13,16 @@ class PadManager
     private const TABLE = "rl_pad";
 
     /**
-     * @param string $uuid
+     * @param int $id
      * @return Pad|null
      */
-    public function getPadByUUID(string $uuid): ?Pad
+    public function getPadById(int $id): ?Pad
     {
         $result = DB::table(self::TABLE)
             ->select([
-                "uuid", "name", "slug", "wikiURL", "imageURL"
+                "id", "name", "slug", "wikiURL", "imageURL"
             ])
-            ->where("uuid", "=", $uuid)
+            ->where("id", "=", $id)
             ->first();
 
         if ($result === null) {
@@ -34,15 +33,35 @@ class PadManager
     }
 
     /**
-     * @param Model $result
+     * @param string $slug
+     * @return Pad|null
+     */
+    public function getPadBySlug(string $slug): ?Pad
+    {
+        $result = DB::table(self::TABLE)
+            ->select([
+                "id", "name", "slug", "wikiURL", "imageURL"
+            ])
+            ->where("slug", "=", $slug)
+            ->first();
+
+        if ($result === null) {
+            return null;
+        }
+
+        return $this->buildPadFromDatabaseResult($result);
+    }
+
+    /**
+     * @param $result
      * @return Pad
      */
-    private function buildPadFromDatabaseResult(Model $result): Pad
+    private function buildPadFromDatabaseResult($result): Pad
     {
         $pad = new Pad();
 
-        if (isset($result->uuid)) {
-            $pad->setUUID($result->uuid);
+        if (isset($result->id)) {
+            $pad->setId($result->id);
         }
 
         if (isset($result->name)) {

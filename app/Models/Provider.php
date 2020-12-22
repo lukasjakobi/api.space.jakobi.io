@@ -6,18 +6,18 @@ namespace App\Models;
 
 
 use App\Models\Utils\HasNameSlug;
-use App\Models\Utils\HasUUID;
+use App\Models\Utils\HasId;
 
-class Provider
+class Provider extends Model
 {
 
-    use HasUUID;
+    use HasId;
     use HasNameSlug;
 
     /**
-     * @var string
+     * @var string|null
      */
-    private string $abbreviation;
+    private ?string $abbreviation = null;
 
     /**
      * @var string|null
@@ -28,6 +28,37 @@ class Provider
      * @var string|null
      */
     private ?string $imageURL = null;
+
+    /**
+     * @return array
+     */
+    public function export(): array
+    {
+        $array = $this->toArray();
+
+        foreach ($array as $key=>$value) {
+            if ($value === null) {
+                unset($array[$key]);
+            }
+        }
+
+        return $array;
+    }
+
+    /**
+     * @return array
+     */
+    private function toArray(): array
+    {
+        return [
+            "id" => $this->id,
+            "name" => $this->name,
+            "slug" => $this->slug,
+            "abbreviation" => $this->abbreviation,
+            "wikiURL" => $this->wikiURL,
+            "imageURL" => $this->imageURL,
+        ];
+    }
 
     /**
      * @return string

@@ -8,13 +8,13 @@ trait HasNameSlug
 {
 
     /**
-     * @var string
+     * @var string|null
      */
-    private string $name;
+    private ?string $name = null;
     /**
-     * @var string
+     * @var string|null
      */
-    private string $slug;
+    private ?string $slug = null;
 
     /**
      * @return string

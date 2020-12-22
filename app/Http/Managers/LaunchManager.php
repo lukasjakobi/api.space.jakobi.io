@@ -9,8 +9,9 @@ use App\Models\LaunchTime;
 use App\Models\Pad;
 use App\Models\Provider;
 use App\Models\Rocket;
+use Carbon\Carbon;
 use DateTime;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class LaunchManager
@@ -31,6 +32,9 @@ class LaunchManager
      */
     private PadManager $padManager;
 
+    /**
+     * LaunchManager constructor.
+     */
     public function __construct()
     {
         $this->rocketManager = new RocketManager();
@@ -39,16 +43,16 @@ class LaunchManager
     }
 
     /**
-     * @param string $uuid
+     * @param int $id
      * @return Launch|null
      */
-    public function getLaunchByUUID(string $uuid): ?Launch
+    public function getLaunchById(int $id): ?Launch
     {
         $result = DB::table(self::TABLE)
             ->select([
-               "uuid", "name", "slug", "description", "statusId", "rocketId","padId","providerId", "tags", "livestreamURL", "startWinOpen", "startWinClose", "startNet", "published"
+               "id", "name", "slug", "description", "statusId", "rocketId","padId","providerId", "tags", "livestreamURL", "startWinOpen", "startWinClose", "startNet", "published"
             ])
-            ->where("uuid", "=", $uuid)
+            ->where("id", "=", $id)
             ->first();
 
         if ($result === null) {
@@ -59,107 +63,166 @@ class LaunchManager
     }
 
     /**
-     * @param int $limit
-     * @return array
+     * @param string $slug
+     * @return Launch|null
      */
-    public function getLaunches($limit = 25): array
+    public function getLaunchBySlug(string $slug): ?Launch
     {
-        $launches = [];
-
         $result = DB::table(self::TABLE)
             ->select([
-                "uuid", "name", "slug", "description", "statusId", "rocketId","padId","providerId", "tags", "livestreamURL", "startWinOpen", "startWinClose", "startNet", "published"
+                "id", "name", "slug", "description", "statusId", "rocketId","padId","providerId", "tags", "livestreamURL", "startWinOpen", "startWinClose", "startNet", "published"
             ])
-            ->limit($limit)
-            ->get();
+            ->where("slug", "=", $slug)
+            ->first();
 
-        foreach ($result as $launch)
-        {
-            $launches[] = $this->buildLaunchFromDatabaseResult($launch);
+        if ($result === null) {
+            return null;
         }
 
-        return $launches;
+        return $this->buildLaunchFromDatabaseResult($result);
+    }
+
+    /**
+     * @param bool $upcoming
+     * @param string $orderBy
+     * @param string $orderMethod
+     * @param int $limit
+     * @param int $page
+     * @param bool $detailed
+     * @return array
+     */
+    public function getLaunches(bool $upcoming, string $orderBy, string $orderMethod, int $limit, int $page, bool $detailed): array
+    {
+        if ($limit > Defaults::REQUEST_LIMIT_MAX) {
+            $limit = Defaults::REQUEST_LIMIT_MAX;
+        }
+
+        $currentTime = Carbon::now()->toDateTimeString();
+        $result = DB::table(self::TABLE)
+            ->select([
+                "id", "name", "slug", "description", "statusId", "rocketId","padId","providerId", "tags", "livestreamURL", "startWinOpen", "startWinClose", "startNet", "published"
+            ])
+            ->offset(($page - 1) * $limit)
+            ->limit($limit)
+            ->orderBy($orderBy, $orderMethod)
+            ->where(Defaults::DATABASE_COLUMN_START_NET, ($upcoming ? '>' : '<'), $currentTime)
+            ->get();
+
+        return $this->extractLaunches($result, $detailed);
     }
 
     /**
      * @param Provider $provider
+     * @param int $page
+     * @param int $limit
+     * @param bool $detailed
      * @return array
      */
-    public function getLaunchesByProvider(Provider $provider): array
+    public function getLaunchesByProvider(Provider $provider, int $limit, int $page, bool $detailed): array
     {
-        $launches = [];
-
         $result = DB::table(self::TABLE)
             ->select([
-                "uuid", "name", "slug", "description", "statusId", "rocketId","padId","providerId", "tags", "livestreamURL", "startWinOpen", "startWinClose", "startNet", "published"
+                "id", "name", "slug", "description", "statusId", "rocketId","padId","providerId", "tags", "livestreamURL", "startWinOpen", "startWinClose", "startNet", "published"
             ])
-            ->where("providerId", "=", $provider->getUUID())
+            ->offset(($page - 1) * $limit)
+            ->limit($limit)
+            ->where("providerId", "=", $provider->getId())
             ->get();
 
-        foreach ($result as $launch)
-        {
-            $launches[] = $this->buildLaunchFromDatabaseResult($launch);
-        }
-
-        return $launches;
+        return $this->extractLaunches($result, $detailed);
     }
 
     /**
      * @param Rocket $rocket
+     * @param int $page
+     * @param int $limit
+     * @param bool $detailed
      * @return array
      */
-    public function getLaunchesByRocket(Rocket $rocket): array
+    public function getLaunchesByRocket(Rocket $rocket, int $limit, int $page, bool $detailed): array
     {
-        $launches = [];
-
         $result = DB::table(self::TABLE)
             ->select([
-                "uuid", "name", "slug", "description", "statusId", "rocketId","padId","providerId", "tags", "livestreamURL", "startWinOpen", "startWinClose", "startNet", "published"
+                "id", "name", "slug", "description", "statusId", "rocketId","padId","providerId", "tags", "livestreamURL", "startWinOpen", "startWinClose", "startNet", "published"
             ])
-            ->where("rocketId", "=", $rocket->getUUID())
+            ->offset(($page - 1) * $limit)
+            ->limit($limit)
+            ->where("rocketId", "=", $rocket->getId())
             ->get();
 
-        foreach ($result as $launch)
-        {
-            $launches[] = $this->buildLaunchFromDatabaseResult($launch);
-        }
-
-        return $launches;
+        return $this->extractLaunches($result, $detailed);
     }
 
     /**
      * @param Pad $pad
+     * @param int $page
+     * @param int $limit
+     * @param bool $detailed
      * @return array
      */
-    public function getLaunchesByPad(Pad $pad): array
+    public function getLaunchesByPad(Pad $pad, int $limit, int $page, bool $detailed): array
+    {
+        $result = DB::table(self::TABLE)
+            ->select([
+                "id", "name", "slug", "description", "statusId", "rocketId","padId","providerId", "tags", "livestreamURL", "startWinOpen", "startWinClose", "startNet", "published"
+            ])
+            ->where("padId", "=", $pad->getId())
+            ->offset(($page - 1) * $limit)
+            ->limit($limit)
+            ->get();
+
+        return $this->extractLaunches($result, $detailed);
+    }
+
+    /**
+     * @param string $query
+     * @param int $limit
+     * @param int $page
+     * @param bool $detailed
+     * @return array
+     */
+    public function searchLaunches(string $query, int $limit, int $page, bool $detailed): array
+    {
+        $result = DB::table(self::TABLE)
+            ->select([
+                "id", "name", "slug", "description", "statusId", "rocketId","padId","providerId", "tags", "livestreamURL", "startWinOpen", "startWinClose", "startNet", "published"
+            ])
+            ->where("tags", "LIKE", $query)
+            ->offset(($page - 1) * $limit)
+            ->limit($limit)
+            ->get();
+
+        return $this->extractLaunches($result, $detailed);
+    }
+
+    /**
+     * @param Collection $result
+     * @param bool $detailed
+     * @return array
+     */
+    private function extractLaunches(Collection $result, bool $detailed): array
     {
         $launches = [];
 
-        $result = DB::table(self::TABLE)
-            ->select([
-                "uuid", "name", "slug", "description", "statusId", "rocketId","padId","providerId", "tags", "livestreamURL", "startWinOpen", "startWinClose", "startNet", "published"
-            ])
-            ->where("padId", "=", $pad->getUUID())
-            ->get();
-
         foreach ($result as $launch)
         {
-            $launches[] = $this->buildLaunchFromDatabaseResult($launch);
+            $launches[] = $this->buildLaunchFromDatabaseResult($launch, $detailed);
         }
 
         return $launches;
     }
 
     /**
-     * @param Model $result
+     * @param $result
+     * @param bool $detailed
      * @return Launch
      */
-    private function buildLaunchFromDatabaseResult(Model $result): Launch
+    private function buildLaunchFromDatabaseResult($result, bool $detailed = true): Launch
     {
         $launch = new Launch();
 
-        if (isset($result->uuid)) {
-            $launch->setUUID($result->uuid);
+        if (isset($result->id)) {
+            $launch->setId($result->id);
         }
 
         if (isset($result->name)) {
@@ -174,24 +237,36 @@ class LaunchManager
             $launch->setDescription($result->description);
         }
 
-        if (isset($result->name)) {
-            $launch->setName($result->name);
-        }
-
-        if (isset($result->rocketId)) {
-            $launch->setRocket($this->rocketManager->getRocketByUUID($result->rocketId));
-        }
-
-        if (isset($result->providerId)) {
-            $launch->setProvider($this->providerManager->getProviderByUUID($result->providerId));
-        }
-
-        if (isset($result->padId)) {
-            $launch->setPad($this->padManager->getPadByUUID($result->padId));
+        if (isset($result->tags)) {
+            try {
+                $launch->setTags(json_decode($result->tags, true, 512, JSON_THROW_ON_ERROR));
+            } catch (\JsonException $ignored) { }
         }
 
         if (
-            isset($result->startWinOpen, $result->startWinClose, $result->startNet)
+            $detailed
+            && isset($result->rocketId)
+        ) {
+            $launch->setRocket($this->rocketManager->getRocketById($result->rocketId));
+        }
+
+        if (
+            $detailed
+            && isset($result->providerId)
+        ) {
+            $launch->setProvider($this->providerManager->getProviderById($result->providerId));
+        }
+
+        if (
+            $detailed
+            && isset($result->padId)
+        ) {
+            $launch->setPad($this->padManager->getPadById($result->padId));
+        }
+
+        if (
+            $detailed
+            && isset($result->startWinOpen, $result->startWinClose, $result->startNet)
             && $result->startWinOpen !== null
             && $result->startWinClose !== null
             && $result->startNet !== null
@@ -205,7 +280,7 @@ class LaunchManager
             $launch->setLaunchTime($launchTime);
         }
 
-        $launch->setPublished($result->published ?? false);
+        $launch->setPublished(isset($result->published) ? (bool)$result->published : false);
 
         return $launch;
     }

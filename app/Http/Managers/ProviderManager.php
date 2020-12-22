@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Managers;
 
 use App\Models\Provider;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class ProviderManager
 {
@@ -13,16 +13,16 @@ class ProviderManager
     private const TABLE = "rl_provider";
 
     /**
-     * @param string $uuid
+     * @param int $id
      * @return Provider|null
      */
-    public function getProviderByUUID(string $uuid): ?Provider
+    public function getProviderById(int $id): ?Provider
     {
         $result = DB::table(self::TABLE)
             ->select([
-                "uuid", "name", "slug", "abbreviation", "wikiURL", "imageURL"
+                "id", "name", "slug", "abbreviation", "wikiURL", "imageURL"
             ])
-            ->where("uuid", "=", $uuid)
+            ->where("id", "=", $id)
             ->first();
 
         if ($result === null) {
@@ -33,15 +33,35 @@ class ProviderManager
     }
 
     /**
-     * @param Model $result
+     * @param string $slug
+     * @return Provider|null
+     */
+    public function getProviderBySlug(string $slug): ?Provider
+    {
+        $result = DB::table(self::TABLE)
+            ->select([
+                "id", "name", "slug", "abbreviation", "wikiURL", "imageURL"
+            ])
+            ->where("slug", "=", $slug)
+            ->first();
+
+        if ($result === null) {
+            return null;
+        }
+
+        return $this->buildProviderFromDatabaseResult($result);
+    }
+
+    /**
+     * @param $result
      * @return Provider
      */
-    private function buildProviderFromDatabaseResult(Model $result): Provider
+    private function buildProviderFromDatabaseResult($result): Provider
     {
         $provider = new Provider();
 
-        if (isset($result->uuid)) {
-            $provider->setUUID($result->uuid);
+        if (isset($result->id)) {
+            $provider->setId($result->id);
         }
 
         if (isset($result->name)) {

@@ -6,23 +6,51 @@ namespace App\Models;
 
 use DateTime;
 
-class LaunchTime
+class LaunchTime extends Model
 {
 
     /**
-     * @var DateTime
+     * @var DateTime|null
      */
-    private DateTime $launchWinOpen;
+    private ?DateTime $launchWinOpen = null;
 
     /**
-     * @var DateTime
+     * @var DateTime|null
      */
-    private DateTime $launchWinClose;
+    private ?DateTime $launchWinClose = null;
 
     /**
-     * @var DateTime
+     * @var DateTime|null
      */
-    private DateTime $launchNet;
+    private ?DateTime $launchNet = null;
+
+    /**
+     * @return array
+     */
+    public function export(): array
+    {
+        $array = $this->toArray();
+
+        foreach ($array as $key=>$value) {
+            if ($value === null) {
+                unset($array[$key]);
+            }
+        }
+
+        return $array;
+    }
+
+    /**
+     * @return array
+     */
+    private function toArray(): array
+    {
+        return [
+            "launchWinOpen" => $this->launchWinOpen,
+            "launchNet" => $this->launchNet,
+            "launchWinClose" => $this->launchWinClose
+        ];
+    }
 
     /**
      * @return DateTime

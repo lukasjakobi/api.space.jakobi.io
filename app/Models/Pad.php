@@ -6,12 +6,12 @@ namespace App\Models;
 
 
 use App\Models\Utils\HasNameSlug;
-use App\Models\Utils\HasUUID;
+use App\Models\Utils\HasId;
 
-class Pad
+class Pad extends Model
 {
 
-    use HasUUID;
+    use HasId;
     use HasNameSlug;
 
     /**
@@ -23,6 +23,36 @@ class Pad
      * @var string|null
      */
     private ?string $imageURL = null;
+
+    /**
+     * @return array
+     */
+    public function export(): array
+    {
+        $array = $this->toArray();
+
+        foreach ($array as $key=>$value) {
+            if ($value === null) {
+                unset($array[$key]);
+            }
+        }
+
+        return $array;
+    }
+
+    /**
+     * @return array
+     */
+    private function toArray(): array
+    {
+        return [
+            "id" => $this->id,
+            "name" => $this->name,
+            "slug" => $this->slug,
+            "wikiURL" => $this->wikiURL,
+            "imageURL" => $this->imageURL,
+        ];
+    }
 
     /**
      * @return string|null

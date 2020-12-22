@@ -8,17 +8,20 @@ $router->get('/', function () use ($router) {
 });
 
 // LAUNCH
-$router->get('/launch', ['uses' => 'LaunchController@getLaunches', 'as' => 'Launch@getLaunches']);
+$router->get('/launch/upcoming', ['uses' => 'LaunchController@getUpcomingLaunches', 'as' => 'Launch@getUpcomingLaunches']);
+$router->get('/launch/previous', ['uses' => 'LaunchController@getPreviousLaunches', 'as' => 'Launch@getPreviousLaunches']);
+$router->get('/launch/search', ['uses' => 'LaunchController@searchLaunches', 'as' => 'Launch@searchLaunches']);
 $router->post('/launch', ['uses' => 'LaunchController@createLaunch', 'as' => 'Launch@createLaunch']);
-$router->get('/launch/{uuid}', ['uses' => 'LaunchController@getLaunch', 'as' => 'Launch@getLaunch']);
-$router->post('/launch/{uuid}', ['uses' => 'LaunchController@updateLaunch', 'as' => 'Launch@updateLaunch']);
-$router->post('/launch/provider/{uuid}', ['uses' => 'LaunchController@getLaunchesByProvider', 'as' => 'Launch@getLaunchesByProvider']);
-$router->post('/launch/rocket/{uuid}', ['uses' => 'LaunchController@getLaunchesByRocket', 'as' => 'Launch@getLaunchesByRocket']);
-$router->post('/launch/pad/{uuid}', ['uses' => 'LaunchController@getLaunchesByPad', 'as' => 'Launch@getLaunchesByPad']);
+$router->get('/launch/{launch}', ['uses' => 'LaunchController@getLaunch', 'as' => 'Launch@getLaunch']);
+$router->post('/launch/{launch}', ['uses' => 'LaunchController@updateLaunch', 'as' => 'Launch@updateLaunch']);
+$router->delete('/launch/{launch}', ['uses' => 'LaunchController@deleteLaunch', 'as' => 'Launch@deleteLaunch']);
+$router->get('/launch/provider/{provider}', ['uses' => 'LaunchController@getLaunchesByProvider', 'as' => 'Launch@getLaunchesByProvider']);
+$router->get('/launch/rocket/{rocket}', ['uses' => 'LaunchController@getLaunchesByRocket', 'as' => 'Launch@getLaunchesByRocket']);
+$router->get('/launch/pad/{pad}', ['uses' => 'LaunchController@getLaunchesByPad', 'as' => 'Launch@getLaunchesByPad']);
 
 // Rocket
-$router->get('/rocket', ['uses' => 'RocketController@getRockets', 'as' => 'Launch@getLaunches']);
-$router->post('/rocket', ['uses' => 'RocketController@createRocket', 'as' => 'Launch@createLaunch']);
-$router->get('/rocket/{uuid}', ['uses' => 'RocketController@getRocket', 'as' => 'Launch@getLaunch']);
-$router->post('/rocket/{uuid}', ['uses' => 'RocketController@updateLaunch', 'as' => 'Launch@updateLaunch']);
+$router->get('/rocket', ['uses' => 'RocketController@getRockets', 'as' => 'Rocket@getRockets']);
+$router->post('/rocket', ['uses' => 'RocketController@createRocket', 'as' => 'Rocket@createRocket']);
+$router->get('/rocket/{rocket}', ['uses' => 'RocketController@getRocket', 'as' => 'Rocket@getRocket']);
+$router->post('/rocket/{rocket}', ['uses' => 'RocketController@updateRocket', 'as' => 'Rocket@updateRocket']);
 

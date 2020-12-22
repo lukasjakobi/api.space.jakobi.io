@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Managers;
 
 use App\Models\Rocket;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class RocketManager
@@ -14,16 +13,16 @@ class RocketManager
     private const TABLE = "rl_rocket";
 
     /**
-     * @param string $uuid
+     * @param int $id
      * @return Rocket|null
      */
-    public function getRocketByUUID(string $uuid): ?Rocket
+    public function getRocketById(int $id): ?Rocket
     {
         $result = DB::table(self::TABLE)
             ->select([
-                "uuid", "name", "slug", "wikiURL", "imageURL"
+                "id", "name", "slug", "wikiURL", "imageURL"
             ])
-            ->where("uuid", "=", $uuid)
+            ->where("id", "=", $id)
             ->first();
 
         if ($result === null) {
@@ -34,15 +33,62 @@ class RocketManager
     }
 
     /**
-     * @param Model $result
+     * @param string $slug
+     * @return Rocket|null
+     */
+    public function getRocketBySlug(string $slug): ?Rocket
+    {
+        $result = DB::table(self::TABLE)
+            ->select([
+                "id", "name", "slug", "wikiURL", "imageURL"
+            ])
+            ->where("slug", "=", $slug)
+            ->first();
+
+        if ($result === null) {
+            return null;
+        }
+
+        return $this->buildRocketFromDatabaseResult($result);
+    }
+
+    /**
+     * @param string $orderBy
+     * @param string $orderMethod
+     * @param int $limit
+     * @param int $page
+     * @return array
+     */
+    public function getRockets(string $orderBy, string $orderMethod, int $limit, int $page): array
+    {
+        $rockets = [];
+        $result = DB::table(self::TABLE)
+            ->select([
+                "id", "name", "slug", "wikiURL", "imageURL"
+            ])
+            ->offset(($page - 1) * $limit)
+            ->limit($limit)
+            ->orderBy($orderBy, $orderMethod)
+            ->get();
+
+        foreach ($result as $item)
+        {
+            $rockets[] = $this->buildRocketFromDatabaseResult($item);
+        }
+
+        return $rockets;
+    }
+
+    /**
+     * @param $result
      * @return Rocket
      */
-    private function buildRocketFromDatabaseResult(Model $result): Rocket
+    private function buildRocketFromDatabaseResult($result): Rocket
     {
         $rocket = new Rocket();
 
-        if (isset($result->uuid)) {
-            $rocket->setUUID($result->uuid);
+        if (isset($result->id)) {
+            $rocket->setId($result->id);
         }
 
         if (isset($result->name)) {

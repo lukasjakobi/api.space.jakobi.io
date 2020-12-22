@@ -4,67 +4,96 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Http\Managers\Defaults;
 use App\Models\Utils\HasNameSlug;
-use App\Models\Utils\HasUUID;
+use App\Models\Utils\HasId;
 
-class Launch
+class Launch extends Model
 {
 
-    use HasUUID;
+    use HasId;
     use HasNameSlug;
-
-    /**
-     * @var string
-     */
-    private string $description;
-
-    /**
-     * @var LaunchStatus
-     */
-    private LaunchStatus $status;
-
-    /**
-     * @var Rocket
-     */
-    private Rocket $rocket;
-
-    /**
-     * @var Provider
-     */
-    private Provider $provider;
-
-    /**
-     * @var Pad
-     */
-    private Pad $pad;
-
-    /**
-     * @var array
-     */
-    private array $tags;
 
     /**
      * @var string|null
      */
-    private ?string $livestreamURL;
+    private ?string $description;
 
     /**
-     * @var LaunchTime
+     * @var LaunchStatus|null
      */
-    private LaunchTime $launchTime;
+    private ?LaunchStatus $status = null;
+
+    /**
+     * @var Rocket|null
+     */
+    private ?Rocket $rocket = null;
+
+    /**
+     * @var Provider|null
+     */
+    private ?Provider $provider = null;
+
+    /**
+     * @var Pad|null
+     */
+    private ?Pad $pad = null;
+
+    /**
+     * @var array
+     */
+    private array $tags = [];
+
+    /**
+     * @var string|null
+     */
+    private ?string $livestreamURL = null;
+
+    /**
+     * @var LaunchTime|null
+     */
+    private ?LaunchTime $launchTime = null;
 
     /**
      * @var bool
      */
-    private bool $published;
+    private bool $published = Defaults::STATUS_PUBLISHED;
 
     /**
-     * Launch constructor.
+     * @return array
      */
-    public function __construct()
+    public function export(): array
     {
-        $this->tags = [];
-        $this->livestreamURL = null;
+        $array = $this->toArray();
+
+        foreach ($array as $key=>$value) {
+            if ($value === null) {
+                unset($array[$key]);
+            }
+        }
+
+        return $array;
+    }
+
+    /**
+     * @return array
+     */
+    private function toArray(): array
+    {
+        return [
+            "id" => $this->id,
+            "name" => $this->name,
+            "slug" => $this->slug,
+            "description" => $this->description ?? null,
+            "status" => $this->status !== null ? $this->status->export() : null,
+            "rocket" => $this->rocket !== null ? $this->rocket->export() : null,
+            "provider" => $this->provider !== null ? $this->provider->export() : null,
+            "pad" => $this->pad !== null ? $this->pad->export() : null,
+            "tags" => $this->tags,
+            "livestreamURL" => $this->livestreamURL ?? null,
+            "launchTime" => $this->launchTime !== null ? $this->launchTime->export() : null,
+            "published" => $this->published,
+        ];
     }
 
     /**

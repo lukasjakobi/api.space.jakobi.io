@@ -4,23 +4,51 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-class LaunchStatus
+class LaunchStatus extends Model
 {
 
     /**
-     * @var int
+     * @var int|null
      */
-    private int $id;
+    private ?int $id = null;
 
     /**
-     * @var string
+     * @var string|null
      */
-    private string $displayName;
+    private ?string $displayName = null;
 
     /**
      * @var bool
      */
-    private bool $cancelled;
+    private ?bool $cancelled = false;
+
+    /**
+     * @return array
+     */
+    public function export(): array
+    {
+        $array = $this->toArray();
+
+        foreach ($array as $key=>$value) {
+            if ($value === null) {
+                unset($array[$key]);
+            }
+        }
+
+        return $array;
+    }
+
+    /**
+     * @return array
+     */
+    private function toArray(): array
+    {
+        return [
+            "id" => $this->id,
+            "displayName" => $this->displayName,
+            "cancelled" => $this->cancelled
+        ];
+    }
 
     /**
      * @return int
