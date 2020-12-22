@@ -145,7 +145,7 @@ class LaunchController extends Controller
         $provider = $this->providerManager->getProviderBySlug($provider);
 
         if ($provider === null) {
-            return $response->setStatusCode(404)->build();
+            return $response->setStatusCode(404)->setErrorMessage("This Provider could not be found")->build();
         }
 
         // parameters
@@ -184,7 +184,7 @@ class LaunchController extends Controller
         $rocket = $this->rocketManager->getRocketBySlug($rocket);
 
         if ($rocket === null) {
-            return $response->setStatusCode(404)->build();
+            return $response->setStatusCode(404)->setErrorMessage("This Rocket could not be found")->build();
         }
 
         // parameters
@@ -223,7 +223,7 @@ class LaunchController extends Controller
         $pad = $this->padManager->getPadBySlug($pad);
 
         if ($pad === null) {
-            return $response->setStatusCode(404)->build();
+            return $response->setStatusCode(404)->setErrorMessage("This Pad could not be found")->build();
         }
 
         // parameters

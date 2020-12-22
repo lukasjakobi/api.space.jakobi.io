@@ -10,6 +10,30 @@ use Illuminate\Http\JsonResponse;
 class Response extends \Illuminate\Http\Response
 {
 
+    /**
+     * @var string|null
+     */
+    private ?string $errorMessage = null;
+
+    /**
+     * @param string|null $errorMessage
+     * @return Response
+     */
+    public function setErrorMessage(?string $errorMessage): Response
+    {
+        $this->errorMessage = $errorMessage;
+
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getErrorMessage(): ?string
+    {
+        return $this->errorMessage;
+    }
+
     public function build(): JsonResponse
     {
         // models to array conversion
@@ -28,6 +52,10 @@ class Response extends \Illuminate\Http\Response
             "statusCode" => $this->statusCode,
             "statusText" => $this->statusText
         ];
+
+        if ($this->errorMessage !== null) {
+            $output["errorMessage"] = $this->errorMessage;
+        }
 
         if (is_array($this->original) || is_countable($this->original)) {
             $output["count"] = count($this->original);
