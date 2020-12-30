@@ -20,7 +20,7 @@ class ProviderManager
     {
         $result = DB::table(self::TABLE)
             ->select([
-                "id", "name", "slug", "abbreviation", "wikiURL", "imageURL"
+                "id", "name", "slug", "abbreviation", "wikiURL", "imageURL", "logoURL"
             ])
             ->where("id", "=", $id)
             ->first();
@@ -40,7 +40,7 @@ class ProviderManager
     {
         $result = DB::table(self::TABLE)
             ->select([
-                "id", "name", "slug", "abbreviation", "wikiURL", "imageURL"
+                "id", "name", "slug", "abbreviation", "wikiURL", "imageURL", "logoURL"
             ])
             ->where("slug", "=", $slug)
             ->first();
@@ -50,6 +50,38 @@ class ProviderManager
         }
 
         return $this->buildProviderFromDatabaseResult($result);
+    }
+
+    /**
+     * @param string $orderBy
+     * @param string $orderMethod
+     * @param int $limit
+     * @param int $page
+     * @return array
+     */
+    public function getProviders(string $orderBy, string $orderMethod, int $limit, int $page): array
+    {
+        $providers = [];
+        $result = DB::table(self::TABLE)
+            ->select([
+                "id", "name", "slug", "abbreviation", "wikiURL", "imageURL", "logoURL"
+            ])
+            ->offset(($page - 1) * $limit)
+            ->limit($limit)
+            ->orderBy($orderBy, $orderMethod)
+            ->get();
+
+        foreach ($result as $item)
+        {
+            $providers[] = $this->buildProviderFromDatabaseResult($item);
+        }
+
+        return $providers;
+    }
+
+    public function getTotalAmount(): int
+    {
+        return DB::table(self::TABLE)->selectRaw("COUNT(*) as total")->first()->total ?? 0;
     }
 
     /**
@@ -82,6 +114,10 @@ class ProviderManager
 
         if (isset($result->imageURL)) {
             $provider->setImageURL($result->imageURL);
+        }
+
+        if (isset($result->logoURL)) {
+            $provider->setLogoURL($result->logoURL);
         }
 
         return $provider;

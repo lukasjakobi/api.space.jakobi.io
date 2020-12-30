@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Response;
 
+use App\Http\Managers\LaunchManager;
 use App\Models\Model;
 use Illuminate\Http\JsonResponse;
 
@@ -11,9 +12,65 @@ class Response extends \Illuminate\Http\Response
 {
 
     /**
+     * @var mixed
+     */
+    private $result;
+
+    /**
+     * @var int
+     */
+    private int $total = 0;
+
+    /**
      * @var string|null
      */
     private ?string $errorMessage = null;
+
+    /**
+     * @return mixed
+     */
+    public function getResult()
+    {
+        return $this->result;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTotal(): int
+    {
+        return $this->total;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getErrorMessage(): ?string
+    {
+        return $this->errorMessage;
+    }
+
+    /**
+     * @param mixed $result
+     * @return Response
+     */
+    public function setResult($result): Response
+    {
+        $this->result = $result;
+
+        return $this;
+    }
+
+    /**
+     * @param int $total
+     * @return Response
+     */
+    public function setTotal(int $total): Response
+    {
+        $this->total = $total;
+
+        return $this;
+    }
 
     /**
      * @param string|null $errorMessage
@@ -26,26 +83,21 @@ class Response extends \Illuminate\Http\Response
         return $this;
     }
 
-    /**
-     * @return string|null
-     */
-    public function getErrorMessage(): ?string
-    {
-        return $this->errorMessage;
-    }
-
     public function build(): JsonResponse
     {
         // models to array conversion
-        if ($this->original instanceof Model) {
-            $this->original = $this->original->export();
-        } elseif (is_array($this->original)) {
-            foreach ($this->original as $key=>$item) {
+        if ($this->result instanceof Model) {
+            $this->result = $this->result->export();
+        } elseif (is_array($this->result)) {
+            foreach ($this->result as $key=>$item) {
                 if ($item instanceof Model) {
-                    $this->original[$key] = $item->export();
+                    $this->result[$key] = $item->export();
                 }
             }
         }
+
+        $l = new LaunchManager();
+        $l->getTotalAmount();
 
         $output = [
             "success" => $this->statusCode === 200,
@@ -57,11 +109,15 @@ class Response extends \Illuminate\Http\Response
             $output["errorMessage"] = $this->errorMessage;
         }
 
-        if (is_array($this->original) || is_countable($this->original)) {
-            $output["count"] = count($this->original);
+        if (is_array($this->result) || is_countable($this->result)) {
+            $output["count"] = count($this->result);
         }
 
-        $output['result'] = $this->original;
+        if ($this->total > 0) {
+            $output["total"] = $this->total;
+        }
+
+        $output['result'] = $this->result;
 
         return response()->json($output);
     }

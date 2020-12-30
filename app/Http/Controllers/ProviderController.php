@@ -5,19 +5,19 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Managers\Defaults;
+use App\Http\Managers\ProviderManager;
 use App\Http\Managers\RocketManager;
 use App\Http\Response\Response;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
 
-class RocketController extends Controller
+class ProviderController extends Controller
 {
 
     /**
-     * @var RocketManager
+     * @var ProviderManager
      */
-    private RocketManager $rocketManager;
+    private ProviderManager $providerManager;
 
     /**
      * Create a new controller instance.
@@ -26,18 +26,18 @@ class RocketController extends Controller
      */
     public function __construct()
     {
-        $this->rocketManager = new RocketManager();
+        $this->providerManager = new ProviderManager();
     }
 
     /**
-     * @param string $rocket
+     * @param string $provider
      * @return JsonResponse
      */
-    public function getRocket(string $rocket): JsonResponse
+    public function getProvider(string $provider): JsonResponse
     {
         $response = new Response();
 
-        $result = $this->rocketManager->getRocketBySlug($rocket);
+        $result = $this->providerManager->getProviderBySlug($provider);
 
         if ($result === null) {
             return $response->setStatusCode(404)->build();
@@ -50,7 +50,7 @@ class RocketController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function getRockets(Request $request): JsonResponse
+    public function getProviders(Request $request): JsonResponse
     {
         $response = new Response();
 
@@ -58,17 +58,17 @@ class RocketController extends Controller
         $limit = $request->has("limit") ? (int) $request->get("limit") : Defaults::REQUEST_LIMIT;
         $page = $request->has("page") ? (int) $request->get("page") : Defaults::REQUEST_PAGE;
 
-        $rockets = $this->rocketManager->getRockets(
+        $providers = $this->providerManager->getProviders(
             Defaults::DATABASE_COLUMN_CREATED,
             Defaults::DATABASE_ORDER_DESC,
             $limit,
             $page
         );
 
-        if ($rockets === null) {
+        if ($providers === null) {
             return $response->setStatusCode(204)->build();
         }
 
-        return $response->setTotal($this->rocketManager->getTotalAmount())->setResult($rockets)->build();
+        return $response->setTotal($this->providerManager->getTotalAmount())->setResult($providers)->build();
     }
 }

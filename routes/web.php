@@ -25,3 +25,9 @@ $router->post('/rocket', ['uses' => 'RocketController@createRocket', 'as' => 'Ro
 $router->get('/rocket/{rocket}', ['uses' => 'RocketController@getRocket', 'as' => 'Rocket@getRocket']);
 $router->post('/rocket/{rocket}', ['uses' => 'RocketController@updateRocket', 'as' => 'Rocket@updateRocket']);
 
+// Provider
+$router->get('/provider', ['uses' => 'ProviderController@getProviders', 'as' => 'Provider@getProviders']);
+$router->post('/provider', ['uses' => 'ProviderController@createProvider', 'as' => 'Provider@createProvider']);
+$router->get('/provider/{provider}', ['uses' => 'ProviderController@getProvider', 'as' => 'Provider@getProvider']);
+$router->post('/provider/{provider}', ['uses' => 'ProviderController@updateProvider', 'as' => 'Provider@updateProvider']);
+

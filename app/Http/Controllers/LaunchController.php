@@ -63,7 +63,7 @@ class LaunchController extends Controller
             return $response->setStatusCode(404)->build();
         }
 
-        return $response->setContent($result)->build();
+        return $response->setResult($result)->build();
     }
 
     /**
@@ -96,7 +96,7 @@ class LaunchController extends Controller
             return $response->setStatusCode(204)->build();
         }
 
-        return $response->setContent($launches)->build();
+        return $response->setTotal($this->launchManager->getTotalAmount())->setResult($launches)->build();
     }
 
     /**
@@ -129,7 +129,7 @@ class LaunchController extends Controller
             return $response->setStatusCode(204)->build();
         }
 
-        return $response->setContent($launches)->build();
+        return $response->setTotal($this->launchManager->getTotalAmount())->setResult($launches)->build();
     }
 
     /**
@@ -168,7 +168,7 @@ class LaunchController extends Controller
             return $response->setStatusCode(204)->build();
         }
 
-        return $response->setContent($launches)->build();
+        return $response->setTotal($this->launchManager->getTotalAmount())->setResult($launches)->build();
     }
 
     /**
@@ -207,7 +207,7 @@ class LaunchController extends Controller
             return $response->setStatusCode(204)->build();
         }
 
-        return $response->setContent($launches)->build();
+        return $response->setTotal($this->launchManager->getTotalAmount())->setResult($launches)->build();
     }
 
     /**
@@ -246,6 +246,6 @@ class LaunchController extends Controller
             return $response->setStatusCode(204)->build();
         }
 
-        return $response->setContent($launches)->build();
+        return $response->setTotal($this->launchManager->getTotalAmount())->setResult($launches)->build();
     }
 }

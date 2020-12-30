@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Utils\HasId;
+
 class LaunchStatus extends Model
 {
 
-    /**
-     * @var int|null
-     */
-    private ?int $id = null;
+    use HasId;
 
     /**
      * @var string|null
@@ -51,14 +50,6 @@ class LaunchStatus extends Model
     }
 
     /**
-     * @return int
-     */
-    public function getId(): int
-    {
-        return $this->id;
-    }
-
-    /**
      * @return string
      */
     public function getDisplayName(): string
@@ -72,17 +63,6 @@ class LaunchStatus extends Model
     public function isCancelled(): bool
     {
         return $this->cancelled;
-    }
-
-    /**
-     * @param int $id
-     * @return LaunchStatus
-     */
-    public function setId(int $id): LaunchStatus
-    {
-        $this->id = $id;
-
-        return $this;
     }
 
     /**

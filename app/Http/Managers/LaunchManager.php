@@ -19,6 +19,10 @@ class LaunchManager
 
     private const TABLE = "rl_launch";
 
+    private const SELECT = [
+        "id", "name", "slug", "description", "statusId", "rocketId", "padId", "providerId", "tags", "livestreamURL", "startWinOpen", "startWinClose", "startNet", "published"
+    ];
+
     /**
      * @var RocketManager
      */
@@ -31,6 +35,10 @@ class LaunchManager
      * @var PadManager
      */
     private PadManager $padManager;
+    /**
+     * @var StatusManager
+     */
+    private StatusManager $statusManager;
 
     /**
      * LaunchManager constructor.
@@ -40,6 +48,7 @@ class LaunchManager
         $this->rocketManager = new RocketManager();
         $this->providerManager = new ProviderManager();
         $this->padManager = new PadManager();
+        $this->statusManager = new StatusManager();
     }
 
     /**
@@ -49,9 +58,7 @@ class LaunchManager
     public function getLaunchById(int $id): ?Launch
     {
         $result = DB::table(self::TABLE)
-            ->select([
-               "id", "name", "slug", "description", "statusId", "rocketId","padId","providerId", "tags", "livestreamURL", "startWinOpen", "startWinClose", "startNet", "published"
-            ])
+            ->select(self::SELECT)
             ->where("id", "=", $id)
             ->first();
 
@@ -69,9 +76,7 @@ class LaunchManager
     public function getLaunchBySlug(string $slug): ?Launch
     {
         $result = DB::table(self::TABLE)
-            ->select([
-                "id", "name", "slug", "description", "statusId", "rocketId","padId","providerId", "tags", "livestreamURL", "startWinOpen", "startWinClose", "startNet", "published"
-            ])
+            ->select(self::SELECT)
             ->where("slug", "=", $slug)
             ->first();
 
@@ -99,9 +104,7 @@ class LaunchManager
 
         $currentTime = Carbon::now()->toDateTimeString();
         $result = DB::table(self::TABLE)
-            ->select([
-                "id", "name", "slug", "description", "statusId", "rocketId","padId","providerId", "tags", "livestreamURL", "startWinOpen", "startWinClose", "startNet", "published"
-            ])
+            ->select(self::SELECT)
             ->offset(($page - 1) * $limit)
             ->limit($limit)
             ->orderBy($orderBy, $orderMethod)
@@ -121,9 +124,7 @@ class LaunchManager
     public function getLaunchesByProvider(Provider $provider, int $limit, int $page, bool $detailed): array
     {
         $result = DB::table(self::TABLE)
-            ->select([
-                "id", "name", "slug", "description", "statusId", "rocketId","padId","providerId", "tags", "livestreamURL", "startWinOpen", "startWinClose", "startNet", "published"
-            ])
+            ->select(self::SELECT)
             ->offset(($page - 1) * $limit)
             ->limit($limit)
             ->where("providerId", "=", $provider->getId())
@@ -142,9 +143,7 @@ class LaunchManager
     public function getLaunchesByRocket(Rocket $rocket, int $limit, int $page, bool $detailed): array
     {
         $result = DB::table(self::TABLE)
-            ->select([
-                "id", "name", "slug", "description", "statusId", "rocketId","padId","providerId", "tags", "livestreamURL", "startWinOpen", "startWinClose", "startNet", "published"
-            ])
+            ->select(self::SELECT)
             ->offset(($page - 1) * $limit)
             ->limit($limit)
             ->where("rocketId", "=", $rocket->getId())
@@ -163,9 +162,7 @@ class LaunchManager
     public function getLaunchesByPad(Pad $pad, int $limit, int $page, bool $detailed): array
     {
         $result = DB::table(self::TABLE)
-            ->select([
-                "id", "name", "slug", "description", "statusId", "rocketId","padId","providerId", "tags", "livestreamURL", "startWinOpen", "startWinClose", "startNet", "published"
-            ])
+            ->select(self::SELECT)
             ->where("padId", "=", $pad->getId())
             ->offset(($page - 1) * $limit)
             ->limit($limit)
@@ -184,15 +181,18 @@ class LaunchManager
     public function searchLaunches(string $query, int $limit, int $page, bool $detailed): array
     {
         $result = DB::table(self::TABLE)
-            ->select([
-                "id", "name", "slug", "description", "statusId", "rocketId","padId","providerId", "tags", "livestreamURL", "startWinOpen", "startWinClose", "startNet", "published"
-            ])
+            ->select(self::SELECT)
             ->where("tags", "LIKE", $query)
             ->offset(($page - 1) * $limit)
             ->limit($limit)
             ->get();
 
         return $this->extractLaunches($result, $detailed);
+    }
+
+    public function getTotalAmount(): int
+    {
+        return DB::table(self::TABLE)->selectRaw("COUNT(*) as total")->first()->total ?? 0;
     }
 
     /**
@@ -259,6 +259,13 @@ class LaunchManager
 
         if (
             $detailed
+            && isset($result->statusId)
+        ) {
+            $launch->setStatus($this->statusManager->getStatusById($result->statusId));
+        }
+
+        if (
+            $detailed
             && isset($result->padId)
         ) {
             $launch->setPad($this->padManager->getPadById($result->padId));
@@ -288,5 +295,4 @@ class LaunchManager
     private function toDateTime(string $timeString): DateTime {
         return DateTime::createFromFormat("Y-m-d H:i:s", $timeString);
     }
-
 }

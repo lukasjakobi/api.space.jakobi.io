@@ -52,6 +52,11 @@ class PadManager
         return $this->buildPadFromDatabaseResult($result);
     }
 
+    public function getTotalAmount(): int
+    {
+        return DB::table(self::TABLE)->selectRaw("COUNT(*) as total")->first()->total ?? 0;
+    }
+
     /**
      * @param $result
      * @return Pad

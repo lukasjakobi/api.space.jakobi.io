@@ -79,6 +79,11 @@ class RocketManager
         return $rockets;
     }
 
+    public function getTotalAmount(): int
+    {
+        return DB::table(self::TABLE)->selectRaw("COUNT(*) as total")->first()->total ?? 0;
+    }
+
     /**
      * @param $result
      * @return Rocket

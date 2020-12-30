@@ -30,6 +30,11 @@ class Provider extends Model
     private ?string $imageURL = null;
 
     /**
+     * @var string|null
+     */
+    private ?string $logoURL = null;
+
+    /**
      * @return array
      */
     public function export(): array
@@ -57,6 +62,7 @@ class Provider extends Model
             "abbreviation" => $this->abbreviation,
             "wikiURL" => $this->wikiURL,
             "imageURL" => $this->imageURL,
+            "logoURL" => $this->logoURL,
         ];
     }
 
@@ -82,6 +88,14 @@ class Provider extends Model
     public function getImageURL(): ?string
     {
         return $this->imageURL;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getLogoURL(): ?string
+    {
+        return $this->logoURL;
     }
 
     /**
@@ -113,6 +127,17 @@ class Provider extends Model
     public function setImageURL(?string $imageURL): Provider
     {
         $this->imageURL = $imageURL;
+
+        return $this;
+    }
+
+    /**
+     * @param string|null $logoURL
+     * @return Provider
+     */
+    public function setLogoURL(?string $logoURL): Provider
+    {
+        $this->logoURL = $logoURL;
 
         return $this;
     }
