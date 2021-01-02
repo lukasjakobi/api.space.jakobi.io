@@ -7,5 +7,5 @@ https://space.jakobi.io
 
 ## Donate for more space-related content
 ```
-https://paypal.me/lukascode
+https://paypal.me/lukasjkk
 ```
