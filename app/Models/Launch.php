@@ -17,7 +17,7 @@ class Launch extends Model
     /**
      * @var string|null
      */
-    private ?string $description;
+    private ?string $description = null;
 
     /**
      * @var LaunchStatus|null
@@ -91,70 +91,32 @@ class Launch extends Model
             "pad" => $this->pad !== null ? $this->pad->export() : null,
             "tags" => $this->tags,
             "livestreamURL" => $this->livestreamURL ?? null,
-            "launchTime" => $this->launchTime !== null ? $this->launchTime->export() : null,
-            "published" => $this->published,
+            "launchTime" => $this->launchTime !== null ? $this->launchTime->export() : null
         ];
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getDescription(): string
+    public function getDescription(): ?string
     {
         return $this->description;
     }
 
     /**
-     * @return LaunchStatus
+     * @return LaunchStatus|null
      */
-    public function getStatus(): LaunchStatus
+    public function getStatus(): ?LaunchStatus
     {
         return $this->status;
     }
 
     /**
-     * @return LaunchTime
+     * @return LaunchTime|null
      */
-    public function getLaunchTime(): LaunchTime
+    public function getLaunchTime(): ?LaunchTime
     {
         return $this->launchTime;
-    }
-
-    /**
-     * @return Pad
-     */
-    public function getPad(): Pad
-    {
-        return $this->pad;
-    }
-
-    /**
-     * @return Provider
-     */
-    public function getProvider(): Provider
-    {
-        return $this->provider;
-    }
-
-    /**
-     * @return Rocket
-     */
-    public function getRocket(): Rocket
-    {
-        return $this->rocket;
-    }
-
-    public function hasTags(): bool
-    {
-        return empty($this->tags);
-    }
-
-    /**
-     * @return array
-     */
-    public function getTags(): array
-    {
-        return $this->tags;
     }
 
     /**
@@ -163,6 +125,38 @@ class Launch extends Model
     public function getLivestreamURL(): ?string
     {
         return $this->livestreamURL;
+    }
+
+    /**
+     * @return Pad|null
+     */
+    public function getPad(): ?Pad
+    {
+        return $this->pad;
+    }
+
+    /**
+     * @return Provider|null
+     */
+    public function getProvider(): ?Provider
+    {
+        return $this->provider;
+    }
+
+    /**
+     * @return Rocket|null
+     */
+    public function getRocket(): ?Rocket
+    {
+        return $this->rocket;
+    }
+
+    /**
+     * @return array
+     */
+    public function getTags(): array
+    {
+        return $this->tags;
     }
 
     public function hasLivestream(): bool

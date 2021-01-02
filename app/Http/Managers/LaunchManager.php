@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Managers;
 
 use App\Models\Launch;
+use App\Models\LaunchStatus;
 use App\Models\LaunchTime;
 use App\Models\Pad;
 use App\Models\Provider;
@@ -109,6 +110,7 @@ class LaunchManager
             ->limit($limit)
             ->orderBy($orderBy, $orderMethod)
             ->where(Defaults::DATABASE_COLUMN_START_NET, ($upcoming ? '>' : '<'), $currentTime)
+            ->where("published", "=", 1)
             ->get();
 
         return $this->extractLaunches($result, $detailed);
@@ -128,6 +130,7 @@ class LaunchManager
             ->offset(($page - 1) * $limit)
             ->limit($limit)
             ->where("providerId", "=", $provider->getId())
+            ->where("published", "=", 1)
             ->get();
 
         return $this->extractLaunches($result, $detailed);
@@ -147,6 +150,7 @@ class LaunchManager
             ->offset(($page - 1) * $limit)
             ->limit($limit)
             ->where("rocketId", "=", $rocket->getId())
+            ->where("published", "=", 1)
             ->get();
 
         return $this->extractLaunches($result, $detailed);
@@ -164,6 +168,7 @@ class LaunchManager
         $result = DB::table(self::TABLE)
             ->select(self::SELECT)
             ->where("padId", "=", $pad->getId())
+            ->where("published", "=", 1)
             ->offset(($page - 1) * $limit)
             ->limit($limit)
             ->get();
@@ -183,6 +188,7 @@ class LaunchManager
         $result = DB::table(self::TABLE)
             ->select(self::SELECT)
             ->where("tags", "LIKE", $query)
+            ->where("published", "=", 1)
             ->offset(($page - 1) * $limit)
             ->limit($limit)
             ->get();
@@ -192,7 +198,7 @@ class LaunchManager
 
     public function getTotalAmount(): int
     {
-        return DB::table(self::TABLE)->selectRaw("COUNT(*) as total")->first()->total ?? 0;
+        return DB::table(self::TABLE)->selectRaw("COUNT(*) as total")->where("published", "=", 1)->first()->total ?? 0;
     }
 
     /**
@@ -294,5 +300,83 @@ class LaunchManager
 
     private function toDateTime(string $timeString): DateTime {
         return DateTime::createFromFormat("Y-m-d H:i:s", $timeString);
+    }
+
+    /**
+     * @param string $name
+     * @param string $description
+     * @param Rocket $rocket
+     * @param Pad $pad
+     * @param Provider $provider
+     * @param LaunchStatus $launchStatus
+     * @param LaunchTime $launchTime
+     * @param array $tags
+     * @param string|null $livestreamURL
+     * @return bool
+     * @throws \JsonException
+     */
+    public function createLaunch(
+        string $name,
+        string $description,
+        Rocket $rocket,
+        Pad $pad,
+        Provider $provider,
+        LaunchStatus $launchStatus,
+        LaunchTime $launchTime,
+        array $tags,
+        ?string $livestreamURL
+    ): bool {
+        $launch = $this->getLaunchBySlug(Utils::stringToSlug($name));
+
+        if ($launch !== null) {
+            return false;
+        }
+
+        return DB::table(self::TABLE)->insert([
+            "name" => $name,
+            "slug" => Utils::stringToSlug($name),
+            "description" => $description,
+            "rocketId" => $rocket === null ? null : $rocket->getId(),
+            "providerId" => $provider === null ? null : $provider->getId(),
+            "padId" => $pad === null ? null : $pad->getId(),
+            "statusId" => $launchStatus === null ? null : $launchStatus->getId(),
+            "tags" => json_encode($tags, JSON_THROW_ON_ERROR),
+            "livestreamURL" => $livestreamURL,
+            "startNet" => $launchTime->getLaunchNet()->format("Y-m-d H:i:s"),
+            "startWinOpen" => $launchTime->getLaunchWinOpen()->format("Y-m-d H:i:s"),
+            "startWinClose" => $launchTime->getLaunchWinClose()->format("Y-m-d H:i:s"),
+            "published" => false
+        ]);
+    }
+
+    /**
+     * @param string $slug
+     * @param string|null $description
+     * @param LaunchStatus|null $launchStatus
+     * @param LaunchTime|null $launchTime
+     * @param array|null $tags
+     * @param string|null $livestreamURL
+     * @param bool $published
+     * @return bool
+     * @throws \JsonException
+     */
+    public function updateLaunch(string $slug, ?string $description, ?LaunchStatus $launchStatus, ?LaunchTime $launchTime, ?array $tags, ?string $livestreamURL, bool $published): bool
+    {
+        $launch = $this->getLaunchBySlug($slug);
+
+        if ($launch === null) {
+            return false;
+        }
+
+        return DB::table(self::TABLE)->update([
+            "description" => $description,
+            "statusId" => $launchStatus === null ? null : $launchStatus->getId(),
+            "tags" => json_encode($tags, JSON_THROW_ON_ERROR),
+            "livestreamURL" => $livestreamURL,
+            "startNet" => $launchTime === null ? null : $launchTime->getLaunchNet()->format("Y-m-d H:i:s"),
+            "startWindowOpen" => $launchTime === null ? null : $launchTime->getLaunchWinOpen()->format("Y-m-d H:i:s"),
+            "startWindowClose" => $launchTime->getLaunchWinClose()->format("Y-m-d H:i:s"),
+            "published" => $published
+        ])->where("slug", "=", $slug);
     }
 }

@@ -59,7 +59,7 @@ class LaunchController extends Controller
 
         $result = $this->launchManager->getLaunchBySlug($launch);
 
-        if ($result === null) {
+        if ($result === null || !$result->isPublished()) {
             return $response->setStatusCode(404)->build();
         }
 

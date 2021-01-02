@@ -5,9 +5,11 @@
     "license": "MIT",
     "type": "project",
     "require": {
-        "php": "7.4",
+        "php": "7.4.3",
+        "ext-json": "*",
+        "guzzlehttp/guzzle": "^7.0",
         "laravel/lumen-framework": "^8.0",
-      "ext-json": "*"
+        "ext-iconv": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
