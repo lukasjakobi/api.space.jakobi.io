@@ -33,14 +33,14 @@ class StatusManager
     }
 
     /**
-     * @param string $slug
+     * @param string $displayName
      * @return Rocket|null
      */
-    public function getStatusBySlug(string $slug): ?LaunchStatus
+    public function getStatusByDisplayName(string $displayName): ?LaunchStatus
     {
         $result = DB::table(self::TABLE)
             ->select(self::SELECT)
-            ->where("slug", "=", $slug)
+            ->where("displayName", "=", $displayName)
             ->first();
 
         if ($result === null) {

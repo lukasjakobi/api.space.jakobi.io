@@ -88,7 +88,7 @@ class Response extends \Illuminate\Http\Response
         // models to array conversion
         if ($this->result instanceof Model) {
             $this->result = $this->result->export();
-        } elseif (is_array($this->result)) {
+        }  elseif (is_array($this->result)) {
             foreach ($this->result as $key=>$item) {
                 if ($item instanceof Model) {
                     $this->result[$key] = $item->export();
@@ -117,7 +117,9 @@ class Response extends \Illuminate\Http\Response
             $output["total"] = $this->total;
         }
 
-        $output['result'] = $this->result;
+        if ($this->result !== null) {
+            $output["result"] = $this->result;
+        }
 
         return response()->json($output);
     }

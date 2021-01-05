@@ -33,8 +33,10 @@ class Admin
     private function checkAdminPassword(string $password): bool
     {
         $check = env('SPACE_ADMIN_PASSWORD');
+        $passwordExplode = explode(" ", $password);
+        $password = $passwordExplode[1] ?? "";
 
-        if ($check === null) {
+        if ($check === null || $password === "") {
             return false;
         }
 

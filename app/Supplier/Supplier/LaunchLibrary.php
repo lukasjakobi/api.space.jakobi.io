@@ -89,7 +89,11 @@ class LaunchLibrary extends Supplier
                 // update launch object
                 $this->launchManager->updateLaunch(
                     $launch->getSlug(),
+                    $launch->getName(),
                     $launch->getDescription(),
+                    $launch->getRocket(),
+                    $launch->getPad(),
+                    $launch->getProvider(),
                     $launch->getStatus(),
                     $launch->getLaunchTime(),
                     $launch->getTags(),

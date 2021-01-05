@@ -10,10 +10,12 @@ use App\Models\LaunchTime;
 use App\Models\Pad;
 use App\Models\Provider;
 use App\Models\Rocket;
+use App\Supplier\Supplier\LaunchLibrary;
 use Carbon\Carbon;
 use DateTime;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use function PHPUnit\Framework\isEmpty;
 
 class LaunchManager
 {
@@ -117,6 +119,27 @@ class LaunchManager
     }
 
     /**
+     * @param int $limit
+     * @param int $page
+     * @param bool $detailed
+     * @return array
+     */
+    public function getLaunchesAdmin(int $limit, int $page, bool $detailed): array
+    {
+        if ($limit > Defaults::REQUEST_LIMIT_MAX) {
+            $limit = Defaults::REQUEST_LIMIT_MAX;
+        }
+
+        $result = DB::table(self::TABLE)
+            ->select(self::SELECT)
+            ->offset(($page - 1) * $limit)
+            ->limit($limit)
+            ->get();
+
+        return $this->extractLaunches($result, $detailed);
+    }
+
+    /**
      * @param Provider $provider
      * @param int $page
      * @param int $limit
@@ -196,6 +219,14 @@ class LaunchManager
         return $this->extractLaunches($result, $detailed);
     }
 
+    public function deleteLaunch($slug): void
+    {
+        DB::table(self::TABLE)->where("slug", "=", $slug)->delete();
+    }
+
+    /**
+     * @return int
+     */
     public function getTotalAmount(): int
     {
         return DB::table(self::TABLE)->selectRaw("COUNT(*) as total")->where("published", "=", 1)->first()->total ?? 0;
@@ -304,12 +335,12 @@ class LaunchManager
 
     /**
      * @param string $name
-     * @param string $description
-     * @param Rocket $rocket
-     * @param Pad $pad
-     * @param Provider $provider
-     * @param LaunchStatus $launchStatus
-     * @param LaunchTime $launchTime
+     * @param string|null $description
+     * @param Rocket|null $rocket
+     * @param Pad|null $pad
+     * @param Provider|null $provider
+     * @param LaunchStatus|null $launchStatus
+     * @param LaunchTime|null $launchTime
      * @param array $tags
      * @param string|null $livestreamURL
      * @return bool
@@ -317,12 +348,12 @@ class LaunchManager
      */
     public function createLaunch(
         string $name,
-        string $description,
-        Rocket $rocket,
-        Pad $pad,
-        Provider $provider,
-        LaunchStatus $launchStatus,
-        LaunchTime $launchTime,
+        ?string $description,
+        ?Rocket $rocket,
+        ?Pad $pad,
+        ?Provider $provider,
+        ?LaunchStatus $launchStatus,
+        ?LaunchTime $launchTime,
         array $tags,
         ?string $livestreamURL
     ): bool {
@@ -342,41 +373,120 @@ class LaunchManager
             "statusId" => $launchStatus === null ? null : $launchStatus->getId(),
             "tags" => json_encode($tags, JSON_THROW_ON_ERROR),
             "livestreamURL" => $livestreamURL,
-            "startNet" => $launchTime->getLaunchNet()->format("Y-m-d H:i:s"),
-            "startWinOpen" => $launchTime->getLaunchWinOpen()->format("Y-m-d H:i:s"),
-            "startWinClose" => $launchTime->getLaunchWinClose()->format("Y-m-d H:i:s"),
+            "startNet" => $launchTime === null ? null : $launchTime->getLaunchNet()->format("Y-m-d H:i:s"),
+            "startWinOpen" => $launchTime === null ? null : $launchTime->getLaunchWinOpen()->format("Y-m-d H:i:s"),
+            "startWinClose" => $launchTime === null ? null : $launchTime->getLaunchWinClose()->format("Y-m-d H:i:s"),
             "published" => false
         ]);
     }
 
     /**
      * @param string $slug
+     * @param string|null $name
      * @param string|null $description
+     * @param Rocket|null $rocket
+     * @param Pad|null $pad
+     * @param Provider|null $provider
      * @param LaunchStatus|null $launchStatus
      * @param LaunchTime|null $launchTime
      * @param array|null $tags
      * @param string|null $livestreamURL
-     * @param bool $published
+     * @param bool|null $published
      * @return bool
      * @throws \JsonException
      */
-    public function updateLaunch(string $slug, ?string $description, ?LaunchStatus $launchStatus, ?LaunchTime $launchTime, ?array $tags, ?string $livestreamURL, bool $published): bool
-    {
+    public function updateLaunch(
+        string $slug,
+        ?string $name,
+        ?string $description,
+        ?Rocket $rocket,
+        ?Pad $pad,
+        ?Provider $provider,
+        ?LaunchStatus $launchStatus,
+        ?LaunchTime $launchTime,
+        ?array $tags,
+        ?string $livestreamURL,
+        ?bool $published
+    ): bool {
         $launch = $this->getLaunchBySlug($slug);
 
         if ($launch === null) {
             return false;
         }
 
-        return DB::table(self::TABLE)->update([
-            "description" => $description,
-            "statusId" => $launchStatus === null ? null : $launchStatus->getId(),
-            "tags" => json_encode($tags, JSON_THROW_ON_ERROR),
-            "livestreamURL" => $livestreamURL,
-            "startNet" => $launchTime === null ? null : $launchTime->getLaunchNet()->format("Y-m-d H:i:s"),
-            "startWindowOpen" => $launchTime === null ? null : $launchTime->getLaunchWinOpen()->format("Y-m-d H:i:s"),
-            "startWindowClose" => $launchTime->getLaunchWinClose()->format("Y-m-d H:i:s"),
-            "published" => $published
-        ])->where("slug", "=", $slug);
+        DB::table(self::TABLE)->where("slug", "=", $slug)->update($this->buildUpdateArray(
+            $name,
+            $description,
+            $rocket,
+            $pad,
+            $provider,
+            $launchStatus,
+            $launchTime,
+            $tags,
+            $livestreamURL,
+            $published
+        ));
+        return true;
+    }
+
+    private function buildUpdateArray(
+        ?string $name,
+        ?string $description,
+        ?Rocket $rocket,
+        ?Pad $pad,
+        ?Provider $provider,
+        ?LaunchStatus $launchStatus,
+        ?LaunchTime $launchTime,
+        ?array $tags,
+        ?string $livestreamURL,
+        bool $published
+    ): array {
+        $array = [];
+
+        if ($name !== null) {
+            $array["name"] = $name;
+        }
+
+        if ($description !== null) {
+            $array["description"] = $description;
+        }
+
+        if ($rocket !== null) {
+            $array["rocketId"] = $rocket->getId();
+        }
+
+        if ($pad !== null) {
+            $array["padId"] = $pad->getId();
+        }
+
+        if ($provider !== null) {
+            $array["providerId"] = $provider->getId();
+        }
+
+        if ($launchStatus !== null) {
+            $array["statusId"] = $launchStatus->getId();
+        }
+
+        if ($launchTime !== null) {
+            $array["startNet"] = $launchTime->getLaunchNet()->format("Y-m-d H:i:s");
+            $array["startWinOpen"] = $launchTime->getLaunchWinOpen()->format("Y-m-d H:i:s");
+            $array["startWinClose"] = $launchTime->getLaunchWinClose()->format("Y-m-d H:i:s");
+        }
+
+        if (!isEmpty($tags)) {
+            try {
+                $array["tags"] = json_encode($tags, JSON_THROW_ON_ERROR);
+            } catch (\JsonException $e) { }
+        }
+
+        if ($livestreamURL !== null) {
+            $array["livestreamURL"] = $livestreamURL;
+        }
+
+        if ($published !== null) {
+            $array["published"] = $published;
+        }
+
+        return $array;
     }
 }

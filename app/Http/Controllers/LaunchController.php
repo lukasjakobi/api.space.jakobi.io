@@ -9,6 +9,8 @@ use App\Http\Managers\LaunchManager;
 use App\Http\Managers\PadManager;
 use App\Http\Managers\ProviderManager;
 use App\Http\Managers\RocketManager;
+use App\Http\Managers\StatusManager;
+use App\Http\Managers\Utils;
 use App\Http\Response\Response;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -37,6 +39,11 @@ class LaunchController extends Controller
     private PadManager $padManager;
 
     /**
+     * @var StatusManager
+     */
+    private StatusManager $statusManager;
+
+    /**
      * Create a new controller instance.
      *
      * @return void
@@ -47,6 +54,7 @@ class LaunchController extends Controller
         $this->rocketManager = new RocketManager();
         $this->providerManager = new ProviderManager();
         $this->padManager = new PadManager();
+        $this->statusManager = new StatusManager();
     }
 
     /**
@@ -64,6 +72,122 @@ class LaunchController extends Controller
         }
 
         return $response->setResult($result)->build();
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \JsonException
+     */
+    public function createLaunch(Request $request): JsonResponse
+    {
+        $response = new Response();
+
+        $name = $request->has("name") ? $request->get("name") : null;
+        $description = $request->has("description") ? $request->get("description") : null;
+        $rocket = $request->has("rocket") ? $this->rocketManager->getRocketBySlug($request->get("rocket")) : null;
+        $provider = $request->has("provider") ? $this->providerManager->getProviderBySlug($request->get("provider")) : null;
+        $pad = $request->has("pad") ? $this->padManager->getPadBySlug($request->get("pad")) : null;
+        $launchStatus = $request->has("status") ? $this->statusManager->getStatusByDisplayName($request->get("status")) : null;
+
+        $this->launchManager->createLaunch(
+            $name,
+            $description,
+            $rocket,
+            $pad,
+            $provider,
+            $launchStatus,
+            null,
+            [],
+            null
+        );
+
+        $result = $this->launchManager->getLaunchBySlug(Utils::stringToSlug($name));
+
+        return $response->setResult($result)->build();
+    }
+
+    /**
+     * @param $launch
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \JsonException
+     */
+    public function updateLaunch($launch, Request $request): JsonResponse
+    {
+        $response = new Response();
+
+        $name = $request->has("name") ? $request->get("name") : null;
+        $description = $request->has("description") ? $request->get("description") : null;
+        $rocket = $request->has("rocket") ? $this->rocketManager->getRocketBySlug($request->get("rocket")) : null;
+        $provider = $request->has("provider") ? $this->providerManager->getProviderBySlug($request->get("provider")) : null;
+        $pad = $request->has("pad") ? $this->padManager->getPadBySlug($request->get("pad")) : null;
+        $launchStatus = $request->has("status") ? $this->statusManager->getStatusByDisplayName($request->get("status")) : null;
+        $published = $request->has("published") ? (bool) $request->get("published") : null;
+
+        $success = $this->launchManager->updateLaunch(
+            $launch,
+            $name,
+            $description,
+            $rocket,
+            $pad,
+            $provider,
+            $launchStatus,
+            null,
+            [],
+            null,
+            $published
+        );
+
+        if (!$success) {
+            return $response->setStatusCode(404)->build();
+        }
+
+        $result = $this->launchManager->getLaunchBySlug($launch);
+        return $response->setResult($result)->build();
+    }
+
+    /**
+     * @param string $launch
+     * @return JsonResponse
+     */
+    public function deleteLaunch(string $launch): JsonResponse
+    {
+        $response = new Response();
+
+        $result = $this->launchManager->getLaunchBySlug($launch);
+
+        if ($result === null) {
+            return $response->setStatusCode(404)->build();
+        }
+
+        $this->launchManager->deleteLaunch($launch);
+        return $response->build();
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getLaunches(Request $request): JsonResponse
+    {
+        $response = new Response();
+
+        // parameters
+        $limit = $request->has("limit") ? (int) $request->get("limit") : Defaults::REQUEST_LIMIT;
+        $page = $request->has("page") ? (int) $request->get("page") : Defaults::REQUEST_PAGE;
+
+        $launches = $this->launchManager->getLaunchesAdmin(
+            $limit,
+            $page,
+            true
+        );
+
+        if ($launches === null) {
+            return $response->setStatusCode(204)->build();
+        }
+
+        return $response->setTotal($this->launchManager->getTotalAmount())->setResult($launches)->build();
     }
 
     /**

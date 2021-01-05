@@ -8,14 +8,15 @@ $router->get('/', function () use ($router) {
 });
 
 // LAUNCH
+$router->get('/launch', ['uses' => 'LaunchController@getLaunches', 'as' => 'Launch@getLaunches', 'middleware' => 'admin']); // admin
 $router->get('/launch/upcoming', ['uses' => 'LaunchController@getUpcomingLaunches', 'as' => 'Launch@getUpcomingLaunches']);
 $router->get('/launch/previous', ['uses' => 'LaunchController@getPreviousLaunches', 'as' => 'Launch@getPreviousLaunches']);
 $router->get('/launch/unpublished', ['uses' => 'LaunchController@getUnpublishedLaunches', 'as' => 'Launch@getUnpublishedLaunches', 'middleware' => 'admin']); // admin // todo
 $router->get('/launch/search', ['uses' => 'LaunchController@searchLaunches', 'as' => 'Launch@searchLaunches']); // todo
-$router->post('/launch', ['uses' => 'LaunchController@createLaunch', 'as' => 'Launch@createLaunch', 'middleware' => 'admin']); // admin // todo
+$router->post('/launch', ['uses' => 'LaunchController@createLaunch', 'as' => 'Launch@createLaunch', 'middleware' => 'admin']); // admin
 $router->get('/launch/{launch}', ['uses' => 'LaunchController@getLaunch', 'as' => 'Launch@getLaunch']);
-$router->post('/launch/{launch}', ['uses' => 'LaunchController@updateLaunch', 'as' => 'Launch@updateLaunch', 'middleware' => 'admin']); // admin // todo
-$router->delete('/launch/{launch}', ['uses' => 'LaunchController@deleteLaunch', 'as' => 'Launch@deleteLaunch', 'middleware' => 'admin']); // admin // todo
+$router->post('/launch/{launch}', ['uses' => 'LaunchController@updateLaunch', 'as' => 'Launch@updateLaunch', 'middleware' => 'admin']); // admin
+$router->delete('/launch/{launch}', ['uses' => 'LaunchController@deleteLaunch', 'as' => 'Launch@deleteLaunch', 'middleware' => 'admin']); // admin
 
 $router->get('/launch/provider/{provider}', ['uses' => 'LaunchController@getLaunchesByProvider', 'as' => 'Launch@getLaunchesByProvider']);
 $router->get('/launch/rocket/{rocket}', ['uses' => 'LaunchController@getLaunchesByRocket', 'as' => 'Launch@getLaunchesByRocket']);
