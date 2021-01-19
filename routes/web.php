@@ -8,13 +8,13 @@ $router->get('/', function () use ($router) {
 });
 
 // SEARCH
-$router->get('/advanced-search', ['uses' => 'SearchController@advancedSearch', 'as' => 'search.advanced']); // todo
+$router->post('/advanced-search', ['uses' => 'SearchController@advancedSearch', 'as' => 'search.advanced']); // todo
 
 // LAUNCH
 $router->get('/launch', ['uses' => 'LaunchController@getLaunches', 'as' => 'launch.list', 'middleware' => 'admin']); // admin
 $router->get('/launch/upcoming', ['uses' => 'LaunchController@getUpcomingLaunches', 'as' => 'launch.upcoming']);
 $router->get('/launch/previous', ['uses' => 'LaunchController@getPreviousLaunches', 'as' => 'launch.previous']);
-$router->get('/launch/unpublished', ['uses' => 'LaunchController@getUnpublishedLaunches', 'as' => 'launch.unpublished', 'middleware' => 'admin']); // admin
+$router->get('/launch/unpublished', ['uses' => 'LaunchController@getUnpublishedLaunches', 'as' => 'launch.unpublished', 'middleware' => 'admin']); // admin // todo
 $router->post('/launch', ['uses' => 'LaunchController@createLaunch', 'as' => 'launch.create', 'middleware' => 'admin']); // admin
 $router->get('/launch/{launch}', ['uses' => 'LaunchController@getLaunch', 'as' => 'launch.get']);
 $router->post('/launch/{launch}', ['uses' => 'LaunchController@updateLaunch', 'as' => 'launch.edit', 'middleware' => 'admin']); // admin
@@ -28,7 +28,7 @@ $router->get('/launch/pad/{pad}', ['uses' => 'LaunchController@getLaunchesByPad'
 $router->get('/rocket', ['uses' => 'RocketController@getRockets', 'as' => 'rocket.list']);
 $router->post('/rocket', ['uses' => 'RocketController@createRocket', 'as' => 'rocket.create', 'middleware' => 'admin']); // admin
 $router->get('/rocket/{rocket}', ['uses' => 'RocketController@getRocket', 'as' => 'rocket.get']);
-$router->post('/rocket/{rocket}', ['uses' => 'RocketController@updateRocket', 'as' => 'rocket.edit', 'middleware' => 'admin']); // admin // todo
+$router->post('/rocket/{rocket}', ['uses' => 'RocketController@updateRocket', 'as' => 'rocket.edit', 'middleware' => 'admin']); // admin
 $router->delete('/rocket/{rocket}', ['uses' => 'RocketController@deleteRocket', 'as' => 'rocket.delete', 'middleware' => 'admin']); // admin
 
 // Provider

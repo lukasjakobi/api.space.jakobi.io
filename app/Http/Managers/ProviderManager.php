@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 class ProviderManager
 {
 
-    private const TABLE = "rl_provider";
+    public const TABLE = "rl_provider";
 
     /**
      * @param int $id

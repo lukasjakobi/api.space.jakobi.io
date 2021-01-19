@@ -90,7 +90,7 @@ class LaunchController extends Controller
         $pad = $request->has("pad") ? $this->padManager->getPadBySlug($request->get("pad")) : null;
         $launchStatus = $request->has("status") ? $this->statusManager->getStatusByDisplayName($request->get("status")) : null;
 
-        $this->launchManager->createLaunch(
+        $success = $this->launchManager->createLaunch(
             $name,
             $description,
             $rocket,
@@ -101,6 +101,10 @@ class LaunchController extends Controller
             [],
             null
         );
+
+        if (!$success) {
+            return $response->setStatusCode(100)->setErrorMessage("Already exists")->build();
+        }
 
         $result = $this->launchManager->getLaunchBySlug(Utils::stringToSlug($name));
 
@@ -122,6 +126,7 @@ class LaunchController extends Controller
         $rocket = $request->has("rocket") ? $this->rocketManager->getRocketBySlug($request->get("rocket")) : null;
         $provider = $request->has("provider") ? $this->providerManager->getProviderBySlug($request->get("provider")) : null;
         $pad = $request->has("pad") ? $this->padManager->getPadBySlug($request->get("pad")) : null;
+        $livestream = $request->has("livestream") ? $request->get("livestream") : null;
         $launchStatus = $request->has("status") ? $this->statusManager->getStatusByDisplayName($request->get("status")) : null;
         $published = $request->has("published") ? (bool) $request->get("published") : null;
 
@@ -133,7 +138,7 @@ class LaunchController extends Controller
             $pad,
             $provider,
             $launchStatus,
-            null,
+            $livestream,
             [],
             null,
             $published

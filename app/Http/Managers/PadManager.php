@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 class PadManager
 {
 
-    private const TABLE = "rl_pad";
+    public const TABLE = "rl_pad";
 
     /**
      * @param int $id

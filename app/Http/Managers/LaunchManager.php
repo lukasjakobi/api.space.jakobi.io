@@ -10,7 +10,6 @@ use App\Models\LaunchTime;
 use App\Models\Pad;
 use App\Models\Provider;
 use App\Models\Rocket;
-use App\Supplier\Supplier\LaunchLibrary;
 use Carbon\Carbon;
 use DateTime;
 use Illuminate\Support\Collection;
@@ -20,7 +19,7 @@ use function PHPUnit\Framework\isEmpty;
 class LaunchManager
 {
 
-    private const TABLE = "rl_launch";
+    public const TABLE = "rl_launch";
 
     private const SELECT = [
         "id", "name", "slug", "description", "statusId", "rocketId", "padId", "providerId", "tags", "livestreamURL", "startWinOpen", "startWinClose", "startNet", "published"
@@ -373,7 +372,6 @@ class LaunchManager
      * @param string|null $livestreamURL
      * @param bool|null $published
      * @return bool
-     * @throws \JsonException
      */
     public function updateLaunch(
         string $slug,
@@ -394,21 +392,38 @@ class LaunchManager
             return false;
         }
 
-        DB::table(self::TABLE)->where("slug", "=", $slug)->update($this->buildUpdateArray(
-            $name,
-            $description,
-            $rocket,
-            $pad,
-            $provider,
-            $launchStatus,
-            $launchTime,
-            $tags,
-            $livestreamURL,
-            $published
-        ));
+        DB::table(self::TABLE)
+            ->where("slug", "=", $slug)
+            ->update(
+                $this->buildUpdateArray(
+                    $name,
+                    $description,
+                    $rocket,
+                    $pad,
+                    $provider,
+                    $launchStatus,
+                    $launchTime,
+                    $tags,
+                    $livestreamURL,
+                    $published
+                )
+            );
         return true;
     }
 
+    /**
+     * @param string|null $name
+     * @param string|null $description
+     * @param Rocket|null $rocket
+     * @param Pad|null $pad
+     * @param Provider|null $provider
+     * @param LaunchStatus|null $launchStatus
+     * @param LaunchTime|null $launchTime
+     * @param array|null $tags
+     * @param string|null $livestreamURL
+     * @param bool|null $published
+     * @return array
+     */
     private function buildUpdateArray(
         ?string $name,
         ?string $description,
@@ -419,7 +434,7 @@ class LaunchManager
         ?LaunchTime $launchTime,
         ?array $tags,
         ?string $livestreamURL,
-        bool $published
+        ?bool $published
     ): array {
         $array = [];
 

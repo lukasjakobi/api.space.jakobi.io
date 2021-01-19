@@ -84,14 +84,46 @@ class RocketController extends Controller
         $wikiURL = $request->has("wikiURL") ? $request->get("wikiURL") : null;
         $imageURL = $request->has("imageURL") ? $request->get("imageURL") : null;
 
-        $this->rocketManager->createRocket(
+        $success = $this->rocketManager->createRocket(
             $name,
             $wikiURL,
             $imageURL
         );
 
+        if (!$success) {
+            return $response->setStatusCode(100)->setErrorMessage("Already exists")->build();
+        }
+
         $result = $this->rocketManager->getRocketBySlug(Utils::stringToSlug($name));
 
+        return $response->setResult($result)->build();
+    }
+
+    /**
+     * @param $rocket
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function updateRocket($rocket, Request $request): JsonResponse
+    {
+        $response = new Response();
+
+        $name = $request->has("name") ? $request->get("name") : null;
+        $imageURL = $request->has("imageURL") ? $request->get("imageURL") : null;
+        $wikiURL = $request->has("wikiURL") ? $request->get("wikiURL") : null;
+
+        $success = $this->rocketManager->updateRocket(
+            $rocket,
+            $name,
+            $wikiURL,
+            $imageURL
+        );
+
+        if (!$success) {
+            return $response->setStatusCode(404)->build();
+        }
+
+        $result = $this->rocketManager->getRocketBySlug($rocket);
         return $response->setResult($result)->build();
     }
 

@@ -10,7 +10,11 @@ use Illuminate\Support\Facades\DB;
 class RocketManager
 {
 
-    private const TABLE = "rl_rocket";
+    public const TABLE = "rl_rocket";
+
+    private const SELECT = [
+        "id", "name", "slug", "imageURL", "wikiURL"
+    ];
 
     /**
      * @param int $id
@@ -19,9 +23,7 @@ class RocketManager
     public function getRocketById(int $id): ?Rocket
     {
         $result = DB::table(self::TABLE)
-            ->select([
-                "id", "name", "slug", "wikiURL", "imageURL"
-            ])
+            ->select(self::SELECT)
             ->where("id", "=", $id)
             ->first();
 
@@ -39,9 +41,7 @@ class RocketManager
     public function getRocketBySlug(string $slug): ?Rocket
     {
         $result = DB::table(self::TABLE)
-            ->select([
-                "id", "name", "slug", "wikiURL", "imageURL"
-            ])
+            ->select(self::SELECT)
             ->where("slug", "=", $slug)
             ->first();
 
@@ -63,9 +63,7 @@ class RocketManager
     {
         $rockets = [];
         $result = DB::table(self::TABLE)
-            ->select([
-                "id", "name", "slug", "wikiURL", "imageURL"
-            ])
+            ->select(self::SELECT)
             ->offset(($page - 1) * $limit)
             ->limit($limit)
             ->orderBy($orderBy, $orderMethod)
@@ -102,6 +100,33 @@ class RocketManager
             "wikiURL" => $wikiURL,
             "imageURL" => $imageURL
         ]);
+    }
+
+    /**
+     * @param string $slug
+     * @param string|null $name
+     * @param string|null $wikiURL
+     * @param string|null $imageURL
+     * @return bool
+     */
+    public function updateRocket(
+        string $slug,
+        ?string $name,
+        ?string $wikiURL,
+        ?string $imageURL
+    ): bool {
+        $rocket = $this->getRocketBySlug($slug);
+
+        if ($rocket === null) {
+            return false;
+        }
+
+        DB::table(self::TABLE)->where("slug", "=", $slug)->update($this->buildUpdateArray(
+            $name,
+            $imageURL,
+            $wikiURL
+        ));
+        return true;
     }
 
     /**
@@ -152,5 +177,33 @@ class RocketManager
         }
 
         return $rocket;
+    }
+
+    /**
+     * @param string|null $name
+     * @param string|null $imageURL
+     * @param string|null $wikiURL
+     * @return array
+     */
+    private function buildUpdateArray(
+        ?string $name,
+        ?string $imageURL,
+        ?string $wikiURL
+    ): array {
+        $array = [];
+
+        if ($name !== null) {
+            $array["name"] = $name;
+        }
+
+        if ($imageURL !== null) {
+            $array["imageURL"] = $imageURL;
+        }
+
+        if ($wikiURL !== null) {
+            $array["wikiURL"] = $wikiURL;
+        }
+
+        return $array;
     }
 }
