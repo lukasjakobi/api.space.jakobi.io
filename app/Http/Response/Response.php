@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Response;
 
-use App\Http\Managers\LaunchManager;
 use App\Models\Model;
 use Illuminate\Http\JsonResponse;
 
@@ -88,7 +87,7 @@ class Response extends \Illuminate\Http\Response
         // models to array conversion
         if ($this->result instanceof Model) {
             $this->result = $this->result->export();
-        }  elseif (is_array($this->result)) {
+        } elseif (is_array($this->result)) {
             foreach ($this->result as $key=>$item) {
                 if ($item instanceof Model) {
                     $this->result[$key] = $item->export();
@@ -96,11 +95,9 @@ class Response extends \Illuminate\Http\Response
             }
         }
 
-        $l = new LaunchManager();
-        $l->getTotalAmount();
-
         $output = [
             "success" => $this->statusCode === 200,
+            "method" => \request()->route()[1]['as'],
             "statusCode" => $this->statusCode,
             "statusText" => $this->statusText
         ];
@@ -109,7 +106,7 @@ class Response extends \Illuminate\Http\Response
             $output["errorMessage"] = $this->errorMessage;
         }
 
-        if (is_array($this->result) || is_countable($this->result)) {
+        if (!is_object($this->result) && (is_array($this->result) || is_countable($this->result))) {
             $output["count"] = count($this->result);
         }
 

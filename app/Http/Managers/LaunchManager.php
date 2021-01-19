@@ -199,26 +199,6 @@ class LaunchManager
         return $this->extractLaunches($result, $detailed);
     }
 
-    /**
-     * @param string $query
-     * @param int $limit
-     * @param int $page
-     * @param bool $detailed
-     * @return array
-     */
-    public function searchLaunches(string $query, int $limit, int $page, bool $detailed): array
-    {
-        $result = DB::table(self::TABLE)
-            ->select(self::SELECT)
-            ->where("tags", "LIKE", $query)
-            ->where("published", "=", 1)
-            ->offset(($page - 1) * $limit)
-            ->limit($limit)
-            ->get();
-
-        return $this->extractLaunches($result, $detailed);
-    }
-
     public function deleteLaunch($slug): void
     {
         DB::table(self::TABLE)->where("slug", "=", $slug)->delete();

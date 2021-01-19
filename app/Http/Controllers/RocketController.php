@@ -6,11 +6,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Managers\Defaults;
 use App\Http\Managers\RocketManager;
+use App\Http\Managers\Utils;
 use App\Http\Response\Response;
-use App\Supplier\Supplier\LaunchLibrary;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
 
 class RocketController extends Controller
 {
@@ -71,5 +70,46 @@ class RocketController extends Controller
         }
 
         return $response->setTotal($this->rocketManager->getTotalAmount())->setResult($rockets)->build();
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function createRocket(Request $request): JsonResponse
+    {
+        $response = new Response();
+
+        $name = $request->has("name") ? $request->get("name") : null;
+        $wikiURL = $request->has("wikiURL") ? $request->get("wikiURL") : null;
+        $imageURL = $request->has("imageURL") ? $request->get("imageURL") : null;
+
+        $this->rocketManager->createRocket(
+            $name,
+            $wikiURL,
+            $imageURL
+        );
+
+        $result = $this->rocketManager->getRocketBySlug(Utils::stringToSlug($name));
+
+        return $response->setResult($result)->build();
+    }
+
+    /**
+     * @param $rocket
+     * @return JsonResponse
+     */
+    public function deleteRocket($rocket): JsonResponse
+    {
+        $response = new Response();
+
+        $result = $this->rocketManager->getRocketBySlug($rocket);
+
+        if ($result === null) {
+            return $response->setStatusCode(404)->build();
+        }
+
+        $this->rocketManager->deleteRocket($rocket);
+        return $response->build();
     }
 }

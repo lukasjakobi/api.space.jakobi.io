@@ -79,6 +79,45 @@ class RocketManager
         return $rockets;
     }
 
+    /**
+     * @param string|null $name
+     * @param string|null $wikiURL
+     * @param string|null $imageURL
+     * @return bool
+     */
+    public function createRocket(
+        ?string $name,
+        ?string $wikiURL,
+        ?string $imageURL
+    ): bool {
+        $rocket = $this->getRocketBySlug(Utils::stringToSlug($name));
+
+        if ($rocket !== null) {
+            return false;
+        }
+
+        return DB::table(self::TABLE)->insert([
+            "name" => $name,
+            "slug" => Utils::stringToSlug($name),
+            "wikiURL" => $wikiURL,
+            "imageURL" => $imageURL
+        ]);
+    }
+
+    /**
+     * @param string $slug
+     * @return void
+     */
+    public function deleteRocket(string $slug): void {
+        $rocket = $this->getRocketBySlug($slug);
+
+        if ($rocket === null) {
+            return;
+        }
+
+        DB::table(self::TABLE)->where("slug", "=", $slug)->delete();
+    }
+
     public function getTotalAmount(): int
     {
         return DB::table(self::TABLE)->selectRaw("COUNT(*) as total")->first()->total ?? 0;
